@@ -1,6 +1,6 @@
 import { Category } from "@/models/category";
 import { NextResponse } from "next/server";
-import { connectDb } from "@/helper/db";
+import { connectDb } from "../../../../../lib/dbConnect";
 connectDb();
 const PUT = async (request, { params }) => {
   const { categoryId } = await params;

@@ -1,4 +1,4 @@
-import { connectDb } from "@/helper/db";
+import { connectDb } from "../../../../lib/dbConnect";
 import { NextResponse } from "next/server";
 import { User } from "@/models/user";
 connectDb();

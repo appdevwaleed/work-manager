@@ -1,11 +1,16 @@
 const { Category } = require("@/models/category");
 const { NextResponse } = require("next/server");
-import { connectDb } from "@/helper/db";
-import { buildTree } from "@/helper/sort";
-import { generateRandomId } from "@/helper/common";
+import { connectDb } from "../../../../lib/dbConnect";
+import { buildTree } from "../../../../lib/categories/categories";
+import { generateRandomId } from "../../../../lib/common";
+import { authenticateUser } from "../../../../lib/middleware/auth";
+
 connectDb();
-const GET = async (request) => {
+
+const GET = async (req, res) => {
   try {
+    const user = await authenticateUser(req, res);
+    console.log("authenticate done .....", user);
     const query = {};
     query.status = "active";
     let categories = await Category.find(query).lean();
@@ -42,6 +47,7 @@ const GET = async (request) => {
     });
   }
 };
+
 const POST = async (request) => {
   const { title, parentId, leftCatId, radius, status, coordinates } =
     await request.json();

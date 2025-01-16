@@ -43,6 +43,12 @@ const UserSchema = new Schema({
   //   },
   creationTime: { type: Date, default: Date.now },
   updatetime: { type: Date, default: Date.now },
+  refreshToken: {
+    type: String,
+  },
+  accessToken: {
+    type: String,
+  },
 });
 
 export const User =
