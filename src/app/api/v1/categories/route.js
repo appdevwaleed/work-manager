@@ -1,12 +1,11 @@
 const { Category } = require("@/models/category");
 const { NextResponse } = require("next/server");
 import { connectDb } from "../../../../lib/dbConnect";
-import { buildTree } from "../../../../lib/categories/categories";
-import { generateRandomId } from "../../../../lib/common";
+import { generateRandomId, buildTree } from "../../../../utils/common";
 import {
   authenticateUser,
   corsAndHeadersVerification,
-} from "../../../../lib/common";
+} from "../../../../utils/common";
 
 connectDb();
 
@@ -42,7 +41,6 @@ const GET = async (req, res) => {
       message: "List of categories",
     });
   } catch (error) {
-    console.log("error", error);
     return NextResponse.json(error, {
       status: 404,
       message: "Unable to get categories",

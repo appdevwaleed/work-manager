@@ -13,9 +13,34 @@ const UserSchema = new Schema({
     unique: true,
     required: [true, "Phone number is required !!"],
   },
+  phonOtp: Number,
+  emailOtp: Number,
   password: {
     type: String,
-    required: [true, "Password is required !!"],
+    default: "12345678",
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  phoneVerified: {
+    type: Boolean,
+    default: false,
+  },
+  refreshToken: {
+    type: String,
+  },
+  accessToken: {
+    type: String,
+  },
+  deviceType: {
+    type: String,
+    enum: ["phone", "system"],
+    default: "phone",
+  },
+  deviceId: {
+    type: String,
+    default: "ab123",
   },
   jobRole: {
     type: String,
@@ -43,12 +68,6 @@ const UserSchema = new Schema({
   //   },
   creationTime: { type: Date, default: Date.now },
   updatetime: { type: Date, default: Date.now },
-  refreshToken: {
-    type: String,
-  },
-  accessToken: {
-    type: String,
-  },
 });
 
 export const User =

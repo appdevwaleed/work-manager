@@ -1,68 +1,59 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { findUserByEmail } from "../../../../../lib/user";
-import { NextResponse } from "next/server";
+
+import {
+  createUser,
+  findUserByEmail,
+  findUserByPhone,
+} from "../../../../../utils/user";
+import { connectDb } from "../../../../../lib/dbConnect";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  apiResponse,
+} from "../../../../../utils/common";
+import { errorCodes } from "../../../../../constants/errorKeys";
+
+connectDb();
 
 const POST = async (request) => {
-  const { email, password } = await request.json();
+  const { email, phonenumber, password } = await request.json();
   if (!email || !password) {
-    return NextResponse.json(error.message, {
-      status: 400,
-      message: "Please provide both email and password",
-    });
+    return apiResponse(
+      errorCodes.badRequest,
+      "Please provide both email and password",
+      error
+    );
   }
 
   try {
-    // Find user by email
     let user = await findUserByEmail(email);
-    if (!user) {
-      return NextResponse.json(error.message, {
-        status: 500,
-        message: "Invalid email address",
-      });
+    let userByPhone = await findUserByPhone(phonenumber);
+    if (!user && !userByPhone) {
+      return apiResponse(
+        errorCodes.badRequest,
+        "Invalid phonenumber address",
+        error
+      );
     }
-
+    console.log("user", user);
     // Check if password is correct
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return NextResponse.json(error.message, {
-        status: 500,
-        message: "Invalid password",
-      });
+      return apiResponse(errorCodes.badRequest, "Invalid password", error);
     }
-
-    // Create new Access and Refresh Tokens
-    const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
-    });
-    const refreshToken = jwt.sign(
-      { id: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    // Save the refresh token in user's record (optional)
+    const accessToken = await generateAccessToken(user);
+    const refreshToken = await generateRefreshToken(user);
     user.refreshToken = refreshToken;
     user.accessToken = accessToken;
     await user.save();
-
     user = user.toObject();
-    return NextResponse.json(
-      {
-        ...user,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      },
-      {
-        status: 200,
-        message: "Authenticated successfully",
-      }
-    );
+    return apiResponse(errorCodes.successResponse, "SignIn successfully", user);
   } catch (error) {
-    return NextResponse.json(error.message, {
-      status: 500,
-      message: "Server error",
-    });
+    return apiResponse(
+      errorCodes.methodNotAllowed,
+      "Provided data is incomplete or not accurate",
+      error
+    );
   }
 };
 export { POST };
