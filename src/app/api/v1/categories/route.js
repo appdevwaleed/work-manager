@@ -3,14 +3,17 @@ const { NextResponse } = require("next/server");
 import { connectDb } from "../../../../lib/dbConnect";
 import { buildTree } from "../../../../lib/categories/categories";
 import { generateRandomId } from "../../../../lib/common";
-import { authenticateUser } from "../../../../lib/middleware/auth";
+import {
+  authenticateUser,
+  corsAndHeadersVerification,
+} from "../../../../lib/common";
 
 connectDb();
 
 const GET = async (req, res) => {
   try {
-    const user = await authenticateUser(req, res);
-    console.log("authenticate done .....", user);
+    const corsHeader = await corsAndHeadersVerification(req);
+    const user = await authenticateUser(req);
     const query = {};
     query.status = "active";
     let categories = await Category.find(query).lean();
@@ -33,7 +36,6 @@ const GET = async (req, res) => {
         }
       }
     }
-    console.log("categories", categories);
     const treeData = buildTree(categories);
     return NextResponse.json(treeData, {
       status: 200,

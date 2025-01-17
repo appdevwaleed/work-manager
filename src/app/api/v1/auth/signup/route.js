@@ -6,7 +6,7 @@ import { connectDb } from "../../../../../lib/dbConnect";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../../../../../lib/jwt";
+} from "../../../../../lib/common";
 
 connectDb();
 
@@ -39,18 +39,8 @@ const POST = async (request) => {
     console.log("newUser", newUser);
     const accessToken = await generateAccessToken(newUser);
     const refreshToken = await generateRefreshToken(newUser);
-
-    // const accessToken = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-    //   expiresIn: "7d", //"15m",
-    // }); // 15 minutes
-    // const refreshToken = jwt.sign(
-    //   { id: newUser._id },
-    //   process.env.JWT_REFRESH_SECRET,
-    //   { expiresIn: "7d" }
-    // ); // 7 days
     newUser.refreshToken = refreshToken;
     newUser.accessToken = accessToken;
-
     await newUser.save();
     newUser = newUser.toObject();
     return NextResponse.json(newUser, {
