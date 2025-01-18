@@ -127,3 +127,13 @@ export const buildTree = (data, parentId = null) => {
       children: buildTree(data, item.randomId), // Recursively find children
     }));
 };
+
+export const generateRandomCode = async () => {
+  return Math.floor(100000 + Math.random() * 900000);
+};
+
+export const excludeKeys = async (object, keysToExclude) => {
+  const result = { ...object };
+  keysToExclude.forEach((key) => delete result[key]);
+  return result;
+};

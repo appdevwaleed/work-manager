@@ -13,7 +13,7 @@ const UserSchema = new Schema({
     unique: true,
     required: [true, "Phone number is required !!"],
   },
-  phonOtp: Number,
+  phoneOtp: Number,
   emailOtp: Number,
   password: {
     type: String,
@@ -48,6 +48,24 @@ const UserSchema = new Schema({
     default: "rider",
     required: [true, "jobRole is required !!"],
   },
+  city: String,
+  country: String,
+  companyName: String,
+  companyAddress: String,
+  companyCity: String,
+  companyCountry: String,
+  profileUrl: String,
+  employmentStatus: {
+    type: String,
+    enum: [
+      "new", //inside country but new
+      "employed", //wokring for company
+      "resigned", //on notice period but inside country
+    ],
+    default: "employed",
+  },
+  experience: Number, //1 means 1 year 2 means 2 years,
+  description: String, //any description related to your job or you want to show employer
   userStatus: {
     type: String,
     enum: [
