@@ -6,25 +6,25 @@ import {
   excludeKeys,
   authenticateUser,
   corsAndHeadersVerification,
-} from "../../../../../../utils/common";
-import { errorCodes } from "../../../../../../constants/errorKeys";
-import { findUserById } from "../../../../../../utils/user";
-import { connectDb } from "../../../../../../lib/dbConnect";
+  hashPassword,
+} from "../../../../../utils/common";
+import { errorCodes } from "../../../../../constants/errorKeys";
+import { findUserById } from "../../../../../utils/user";
+import { connectDb } from "../../../../../lib/dbConnect";
 
 connectDb();
 
 const POST = async (request) => {
-  const corsHeader = await corsAndHeadersVerification(req);
-  const user = await authenticateUser(req);
-  const api_req = await request.json();
   try {
-    const existingUser = await findUserById(user?._id);
+    const corsHeader = await corsAndHeadersVerification(request);
+    let user = await authenticateUser(request);
+    const api_req = await request.json();
+    let existingUser = await findUserById(user?._id);
     if (!existingUser) {
       return apiResponse(errorCodes.badRequest, "User not found");
     }
     if (api_req?.password) {
-      const hashedPassword = await bcrypt.hash(api_req?.password, 12);
-      existingUser.password = hashedPassword;
+      existingUser.password = await hashPassword(api_req?.password); //
     }
     if (api_req?.city) existingUser.city = api_req?.city;
     if (api_req?.country) existingUser.country = api_req?.country;
@@ -51,15 +51,14 @@ const POST = async (request) => {
     existingUser = existingUser.toObject();
     console.log("newUser", existingUser);
     existingUser = await excludeKeys(existingUser, [
-      "phonOtp",
-      "emailOtp",
+      // "phonOtp",
+      // "emailOtp",
       "password",
       "refreshToken",
       "accessToken",
       "creationTime",
       "updatetime",
     ]);
-    console.log("newUser", existingUser);
     return apiResponse(
       errorCodes.successResponse,
       "User updated successfully",

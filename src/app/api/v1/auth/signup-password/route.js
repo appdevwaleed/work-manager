@@ -42,24 +42,24 @@ const POST = async (request) => {
     }
 
     let newUser = null;
-    if (api_req?.email) {
-      newUser = await createUser({ email: api_req?.email });
-      newUser.emailOtp = await generateRandomCode();
-    } else if (api_req?.phonenumber) {
+    if (api_req?.email) newUser = await createUser({ email: api_req?.email });
+    else if (api_req?.phonenumber)
       newUser = await createUser({ phonenumber: api_req?.phonenumber });
-    }
+
     if (api_req?.password) {
       newUser.password = await hashPassword(api_req?.password);
-      newUser.phoneOtp = await generateRandomCode();
     }
+
+    newUser.refreshToken = await generateRefreshToken(newUser);
+    newUser.accessToken = await generateAccessToken(newUser);
+
     await newUser.save();
     newUser = newUser.toObject();
+    console.log("newUser", newUser);
     newUser = await excludeKeys(newUser, [
       "phoneOtp",
       "emailOtp",
       "password",
-      "refreshToken",
-      "accessToken",
       "creationTime",
       "updatetime",
       "emailVerified",
@@ -69,7 +69,6 @@ const POST = async (request) => {
       "employmentStatus",
       "userStatus",
     ]);
-    console.log("newUser", newUser);
     return apiResponse(
       errorCodes.createdSuccess,
       "User created successfully",

@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import passport from "../lib/passport"; // Import passport instance
 import { NextResponse } from "next/server";
 passport.initialize();
@@ -137,3 +138,12 @@ export const excludeKeys = async (object, keysToExclude) => {
   keysToExclude.forEach((key) => delete result[key]);
   return result;
 };
+
+export async function verifyPassword(inputPassword, storedHash) {
+  return await bcrypt.compare(inputPassword, storedHash);
+}
+
+export async function hashPassword(password) {
+  const saltRounds = 12;
+  return await bcrypt.hash(password, saltRounds);
+}

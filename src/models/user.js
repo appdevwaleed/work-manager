@@ -6,18 +6,17 @@ const UserSchema = new Schema({
   email: {
     type: String,
     unique: true,
-    required: [true, "Email is required !!"],
+    sparse: true, // Enables unique constraint to ignore null values
   },
   phonenumber: {
     type: String,
     unique: true,
-    required: [true, "Phone number is required !!"],
+    sparse: true, // Enables unique constraint to ignore null values
   },
   phoneOtp: Number,
   emailOtp: Number,
   password: {
     type: String,
-    default: "12345678",
   },
   emailVerified: {
     type: Boolean,
@@ -44,8 +43,8 @@ const UserSchema = new Schema({
   },
   jobRole: {
     type: String,
-    enum: ["employee", "employer", "rider", "admin"],
-    default: "rider",
+    enum: ["employee", "employer", "rider", "admin", "user"],
+    default: "user",
     required: [true, "jobRole is required !!"],
   },
   city: String,

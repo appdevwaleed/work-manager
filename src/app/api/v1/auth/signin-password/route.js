@@ -12,13 +12,14 @@ import {
   apiResponse,
   generateRandomCode,
   excludeKeys,
+  verifyPassword,
 } from "../../../../../utils/common";
 import { errorCodes } from "../../../../../constants/errorKeys";
 
 connectDb();
 
 const POST = async (request) => {
-  const { email, phonenumber } = await request.json();
+  const { email, phonenumber, password } = await request.json();
   if (!email && !phonenumber) {
     return apiResponse(
       errorCodes.badRequest,
@@ -29,19 +30,24 @@ const POST = async (request) => {
     let user = null;
     if (email) {
       user = await findUserByEmail(email);
-      user.emailOtp = await generateRandomCode();
     } else if (phonenumber) {
       user = await findUserByPhone(phonenumber);
-      user.phoneOtp = await generateRandomCode();
     }
+    if (!user) throw new Error("Provided data is incomplete or not accurate");
+    const isPasswordValid = await verifyPassword(password, user.password);
+    if (!isPasswordValid) {
+      return apiResponse(errorCodes.badRequest, "Password is incorrect");
+    }
+    const accessToken = await generateAccessToken(user);
+    const refreshToken = await generateRefreshToken(user);
+    user.refreshToken = refreshToken;
+    user.accessToken = accessToken;
     await user.save();
     user = user.toObject();
     user = await excludeKeys(user, [
-      // "phoneOtp",
-      // "emailOtp",
+      "phoneOtp",
+      "emailOtp",
       "password",
-      "refreshToken",
-      "accessToken",
       "creationTime",
       "updatetime",
       "emailVerified",
@@ -51,10 +57,7 @@ const POST = async (request) => {
       "employmentStatus",
       "userStatus",
     ]);
-    let message = email
-      ? "Otp sent on your provided " + email
-      : "Otp sent on your provided " + phonenumber;
-    return apiResponse(errorCodes.successResponse, message, user);
+    return apiResponse(errorCodes.successResponse, "Login Successfully", user);
   } catch (error) {
     console.log("error", error);
     return apiResponse(

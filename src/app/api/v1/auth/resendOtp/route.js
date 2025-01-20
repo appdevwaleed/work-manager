@@ -1,14 +1,6 @@
-import bcrypt from "bcryptjs";
-
-import {
-  createUser,
-  findUserByEmail,
-  findUserByPhone,
-} from "../../../../../utils/user";
+import { findUserByEmail, findUserByPhone } from "../../../../../utils/user";
 import { connectDb } from "../../../../../lib/dbConnect";
 import {
-  generateAccessToken,
-  generateRefreshToken,
   apiResponse,
   generateRandomCode,
   excludeKeys,
@@ -29,11 +21,12 @@ const POST = async (request) => {
     let user = null;
     if (email) {
       user = await findUserByEmail(email);
-      user.emailOtp = await generateRandomCode();
     } else if (phonenumber) {
       user = await findUserByPhone(phonenumber);
-      user.phoneOtp = await generateRandomCode();
     }
+    user.phoneOtp = await generateRandomCode();
+    user.emailOtp = await generateRandomCode();
+    console.log("user", user);
     await user.save();
     user = user.toObject();
     user = await excludeKeys(user, [
