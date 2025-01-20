@@ -1,6 +1,3 @@
-// /pages/api/auth/signup.js
-import bcrypt from "bcryptjs";
-
 import {
   createUser,
   findUserByEmail,

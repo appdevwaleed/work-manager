@@ -1,16 +1,9 @@
-import bcrypt from "bcryptjs";
-
-import {
-  createUser,
-  findUserByEmail,
-  findUserByPhone,
-} from "../../../../../utils/user";
+import { findUserByEmail, findUserByPhone } from "../../../../../utils/user";
 import { connectDb } from "../../../../../lib/dbConnect";
 import {
   generateAccessToken,
   generateRefreshToken,
   apiResponse,
-  generateRandomCode,
   excludeKeys,
   verifyPassword,
 } from "../../../../../utils/common";
