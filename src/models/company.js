@@ -1,19 +1,34 @@
+import {
+  companyMainTypeEnum,
+  companySubTypeEnum,
+  companyStatus,
+} from "@/constants/enums";
+import mongoose, { Schema } from "mongoose";
 const CompanySchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: [true, "name is required for company!!"],
+  },
+  city: {
+    type: String,
+    required: [true, "city is required for company!!"],
+  },
+  country: {
+    type: String,
+    required: [true, "country is required for company!!"],
   },
   address: {
     type: String,
+    required: [true, "address is required for company!!"],
   },
-  type: {
+  mainType: {
     type: String,
-    enum: [
-      "store", //inside country but new
-      "company", //wokring for company
-      "subcompany", //on notice period but inside country
-      "substore", //on notice period but inside country
-    ],
+    enum: companyMainTypeEnum,
+    default: "product",
+  },
+  subType: {
+    type: String,
+    enum: companySubTypeEnum,
     default: "company",
   },
   parentCompany: {
@@ -24,14 +39,8 @@ const CompanySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: [
-      "active",
-      "inactive",
-      "deleted",
-      "blocked",
-      "pending", //request to create company
-    ],
-    default: "company",
+    enum: companyStatus,
+    default: "active",
   },
 });
 

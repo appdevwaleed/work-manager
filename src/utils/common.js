@@ -34,12 +34,14 @@ export const authenticateUser = async (req) => {
           status: 500,
           error: "Internal server error",
           details: err.message,
+          message: "Internal server error",
         });
       }
       if (!user) {
         reject({
           status: 401,
           error: info?.message || "Token invalid",
+          message: "Authentification failed",
         });
       }
       resolve(user);
@@ -136,6 +138,15 @@ export const generateRandomCode = async () => {
 export const excludeKeys = async (object, keysToExclude) => {
   const result = { ...object };
   keysToExclude.forEach((key) => delete result[key]);
+  return result;
+};
+export const includeKeys = async (data, keys) => {
+  const result = {};
+  keys.forEach((key) => {
+    if (key in data) {
+      result[key] = data[key];
+    }
+  });
   return result;
 };
 

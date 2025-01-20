@@ -43,7 +43,7 @@ const UserSchema = new Schema({
   },
   jobRole: {
     type: String,
-    enum: ["employee", "employer", "rider", "admin", "user"],
+    enum: ["employee", "employer", "rider", "admin", "user", "superadmin"],
     default: "user",
     required: [true, "jobRole is required !!"],
   },
