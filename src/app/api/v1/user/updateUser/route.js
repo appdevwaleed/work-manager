@@ -44,6 +44,9 @@ const POST = async (request) => {
       existingUser.emailOtp = await generateRandomCode();
       existingUser.emailVerified = false;
     }
+    if (api_req?.jobRole) {
+      existingUser.jobRole = api_req?.jobRole;
+    }
 
     await existingUser.save();
     existingUser = existingUser.toObject();
@@ -56,6 +59,7 @@ const POST = async (request) => {
       "accessToken",
       "creationTime",
       "updatetime",
+      "jobRole",
     ]);
     return apiResponse(
       errorCodes.successResponse,

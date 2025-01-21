@@ -1,33 +1,35 @@
 import { connectDb } from "@/lib/dbConnect";
-import { apiResponse, excludeKeys } from "@/utils/common";
-import { errorCodes } from "@/constants/errorKeys";
 import {
+  apiResponse,
+  excludeKeys,
   authenticateUser,
   corsAndHeadersVerification,
-} from "../../../../utils/common";
-import { createCompany, responseData } from "@/utils/company";
+} from "@/utils/common";
+import { errorCodes } from "@/constants/errorKeys";
+
+import { updateCompany, responseData } from "@/utils/company";
+import { errorMessage } from "@/constants/errorMessages";
 connectDb();
 
 const POST = async (request) => {
   try {
     const corsHeader = await corsAndHeadersVerification(request);
     const user = await authenticateUser(request);
-    let company = await createCompany(request);
-    console.log("company111111", company);
+    let company = await updateCompany(request, user);
     company = company.toObject();
     const response = await responseData(company);
     return apiResponse(
       errorCodes.successResponse,
-      "Company created successfully",
+      errorMessage.comUpdatedSuccess,
       response
     );
   } catch (error) {
-    console.log("error", error);
     return apiResponse(
       error.status ? error.status : errorCodes.methodNotAllowed,
       error.message
         ? error.message
-        : "Provided data is incomplete or not accurate"
+        : "Provided data is incomplete or not accurate",
+      error?._obj ? error._obj : error
     );
   }
 };

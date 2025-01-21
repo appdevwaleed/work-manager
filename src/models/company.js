@@ -2,6 +2,9 @@ import {
   companyMainTypeEnum,
   companySubTypeEnum,
   companyStatus,
+  def_companyMainType,
+  def_companySubType,
+  def_companyStatus,
 } from "@/constants/enums";
 import mongoose, { Schema } from "mongoose";
 const CompanySchema = new mongoose.Schema({
@@ -24,12 +27,12 @@ const CompanySchema = new mongoose.Schema({
   mainType: {
     type: String,
     enum: companyMainTypeEnum,
-    default: "product",
+    default: def_companyMainType,
   },
   subType: {
     type: String,
     enum: companySubTypeEnum,
-    default: "company",
+    default: def_companySubType,
   },
   parentCompany: {
     type: Number, //parent company id mongoose.ObjectId
@@ -40,8 +43,15 @@ const CompanySchema = new mongoose.Schema({
   status: {
     type: String,
     enum: companyStatus,
-    default: "active",
+    default: def_companyStatus,
   },
+  createdby: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  creationTime: { type: Date, default: Date.now },
+  updatetime: { type: Date, default: Date.now },
 });
 
 export default mongoose.models.Company ||

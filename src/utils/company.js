@@ -7,79 +7,206 @@ import {
 import { apiResponse } from "@/utils/common";
 import { includeKeys } from "@/utils/common";
 import { errorCodes } from "@/constants/errorKeys";
-export const createCompany = async (request) => {
-  try {
-    console.log("createCompany..........");
-    let api_req = await request.json();
-    if (!api_req?.name || api_req?.name.trim() == "")
-      return apiResponse(errorCodes?.badRequest, "Please provide name");
-    if (!api_req?.city || api_req?.city.trim() == "")
-      return apiResponse(errorCodes?.badRequest, "Please provide city");
-    if (!api_req?.country || api_req?.country.trim() == "")
-      return apiResponse(errorCodes?.badRequest, "Please provide country");
-    if (!api_req?.address || api_req?.address.trim() == "")
-      return apiResponse(
-        errorCodes?.badRequest,
-        "Please provide company address"
-      );
-    if (user?.jobRole !== "superadmin" && user?.jobRole !== "admin") {
-      return apiResponse(
-        errorCodes?.badRequest,
-        "Not an authentic person to create companies, You should be an admin or superadmin"
-      );
-    }
-    let company = new Company({
-      name: api_req.name,
-      city: api_req.city,
-      country: api_req.country,
-      address: api_req.address,
-      type: api_req.type,
-      parentCompany: api_req.parentCompany,
-      status: api_req.status,
-    });
-    if (api_req?.mainType && !companyMainTypeEnum.includes(api_req?.mainType)) {
-      return apiResponse(
-        errorCodes.badRequest,
-        "Company type should be appropiate",
-        companyMainTypeEnum
-      );
-    } else if (
-      api_req?.mainType &&
-      companyMainTypeEnum?.includes(api_req.mainType)
-    ) {
-      company.mainType = api_req.mainType;
-    }
+import { errorMessage } from "@/constants/errorMessages";
 
-    if (api_req?.subType && !companySubTypeEnum?.includes(api_req.subType)) {
-      return apiResponse(
-        errorCodes.badRequest,
-        "Company subType should be appropiate",
-        companySubTypeEnum
-      );
-    } else if (
-      api_req?.subType &&
-      companySubTypeEnum.includes(api_req?.subType)
-    ) {
-      company.subType = api_req?.subType;
-    }
+import { connectDb } from "@/lib/dbConnect";
+connectDb();
 
-    if (api_req?.status && !companyStatus.includes(api_req?.status)) {
-      return apiResponse(
-        errorCodes?.badRequest,
-        "Company status should be appropiate",
-        companyStatus
-      );
-    } else {
-      company.status = api_req.status;
+export const createCompany = async (request, user) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let api_req = await request.json();
+      if (user?.jobRole !== "superadmin" && user?.jobRole !== "admin") {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.notAuthPerson,
+          _obj: ["superadmin", "admin"],
+        });
+      }
+      if (!api_req?.name || api_req?.name.trim() == "") {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.noNameError,
+        });
+      }
+      if (!api_req?.city || api_req?.city.trim() == "") {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.noCityError,
+        });
+      }
+
+      if (!api_req?.country || api_req?.country.trim() == "") {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.noCountryError,
+        });
+      }
+      if (!api_req?.address || api_req?.address.trim() == "") {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.noAddrError,
+        });
+      }
+
+      let company = await new Company({
+        name: api_req.name,
+        city: api_req.city,
+        country: api_req.country,
+        address: api_req.address,
+        type: api_req.type,
+        parentCompany: api_req.parentCompany,
+        status: api_req.status,
+        createdby: user._id,
+      });
+      if (
+        api_req?.mainType &&
+        !companyMainTypeEnum.includes(api_req?.mainType)
+      ) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.comTypeError,
+          _obj: companyMainTypeEnum,
+        });
+      } else if (
+        api_req?.mainType &&
+        companyMainTypeEnum?.includes(api_req.mainType)
+      ) {
+        company.mainType = api_req.mainType;
+      }
+
+      if (api_req?.subType && !companySubTypeEnum?.includes(api_req.subType)) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.comSubTypeError,
+          _obj: companyMainTypeEnum,
+        });
+      } else if (
+        api_req?.subType &&
+        companySubTypeEnum.includes(api_req?.subType)
+      ) {
+        company.subType = api_req?.subType;
+      }
+
+      if (api_req?.status && !companyStatus.includes(api_req?.status)) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.comStatusError,
+          _obj: companyStatus,
+        });
+      } else {
+        company.status = api_req.status;
+      }
+      await company.save();
+      resolve(company);
+    } catch (error) {
+      reject(error);
     }
-    console.log("company11111112222................");
-    await company.save();
-    return company;
-  } catch (error) {
-    console.log("error 1");
-    return error;
-  }
+  });
 };
+export const updateCompany = async (request, user) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let api_req = await request.json();
+      if (user?.jobRole !== "superadmin" && user?.jobRole !== "admin") {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.notAuthPerson,
+          _obj: ["superadmin", "admin"],
+        });
+      }
+      let fil_company = await Company.findById(api_req?.company_id);
+      if (!fil_company) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.comNotFound,
+          _obj: {},
+        });
+      }
+      if (api_req?.name && api_req?.name.trim() !== "")
+        fil_company.name = api_req?.name;
+      if (api_req?.city && api_req?.city.trim() !== "") {
+        fil_company.city = api_req?.city;
+      }
+
+      if (api_req?.country && api_req?.country.trim() !== "") {
+        fil_company.country = api_req?.country;
+      }
+      if (api_req?.address && api_req?.address.trim() !== "") {
+        fil_company.address = api_req?.address;
+      }
+      if (api_req?.parentCompany && api_req?.parentCompany.trim() !== "") {
+        fil_company.parentCompany = api_req?.parentCompany;
+      }
+      if (api_req?.status && !companyStatus?.includes(api_req?.status)) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.comStatusError,
+          _obj: companyStatus,
+        });
+      } else if (api_req?.status && companyStatus?.includes(api_req?.status)) {
+        fil_company.status = api_req?.status;
+      }
+      if (
+        api_req?.mainType &&
+        !companyMainTypeEnum?.includes(api_req?.mainType)
+      ) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.comTypeError,
+          _obj: companyMainTypeEnum,
+        });
+      } else if (
+        api_req?.mainType &&
+        companyMainTypeEnum?.includes(api_req?.mainType)
+      ) {
+        fil_company.mainType = api_req?.mainType;
+      }
+      if (api_req?.subType && !companySubTypeEnum?.includes(api_req?.subType)) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.comSubTypeError,
+          _obj: companySubTypeEnum,
+        });
+      } else if (
+        api_req?.subType &&
+        companySubTypeEnum?.includes(api_req?.subType)
+      ) {
+        fil_company.subType = api_req?.subType;
+      }
+
+      await fil_company.save();
+      resolve(fil_company);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+export const getAllComapnies = async (request) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let companies = await Company.find();
+      if (companies?.length > 0) {
+        resolve(companies);
+      } else {
+        reject({
+          message: "companies not found",
+          status: 400,
+          data: {},
+        });
+      }
+    } catch (error) {
+      reject({
+        message: "companies not found",
+        status: 400,
+        data: error,
+      });
+    }
+  });
+};
+
+export const responseMessage = async (status, message, _obj) => {};
 export const responseData = async (companyData) => {
   let data = await includeKeys(companyData, [
     "_id",
@@ -91,6 +218,9 @@ export const responseData = async (companyData) => {
     "subType",
     "parentCompany",
     "status",
+    "createdby",
+    "creationTime",
+    "updatetime",
   ]);
   return data;
 };

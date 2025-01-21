@@ -71,3 +71,26 @@ export const generateToken = async (refreshToken) => {
     }
   });
 };
+
+export const getAllUsers = async (request) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let users = await User.find();
+      if (users?.length > 0) {
+        resolve(users);
+      } else {
+        reject({
+          message: "users not found",
+          status: 400,
+          data: {},
+        });
+      }
+    } catch (error) {
+      reject({
+        message: "users not found",
+        status: 400,
+        data: error,
+      });
+    }
+  });
+};

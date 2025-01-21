@@ -1,43 +1,41 @@
 import mongoose, { Schema } from "mongoose";
-const userCompanySchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    company: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      required: true,
-    },
-    roles: [
-      {
-        type: String,
-        enum: ["admin", "manager", "employee"],
-        default: "employee",
-      },
-    ],
-    status: {
-      type: String,
-      enum: [
-        "active",
-        "inactive",
-        "deleted",
-        "blocked",
-        "pending", //request to create company
-      ],
-      default: "active",
-    },
+import {
+  user_com_roles,
+  def_user_com_role,
+  user_com_status,
+  def_user_com_status,
+} from "@/constants/enums";
+const userCompanySchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
-  {
-    timestamps: true, // Automatically add `createdAt` and `updatedAt` fields
-    indexes: [
-      // Ensure a user can only have one unique relationship with a specific company
-      { unique: true, fields: ["user", "company"] },
-    ],
-  }
-);
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+    required: true,
+  },
+  roles: [
+    {
+      type: String,
+      enum: user_com_roles,
+      default: def_user_com_role,
+    },
+  ],
+  status: {
+    type: String,
+    enum: user_com_status,
+    default: def_user_com_status,
+  },
+  createdby: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  creationTime: { type: Date, default: Date.now },
+  updatetime: { type: Date, default: Date.now },
+});
 
 export default mongoose.models.UserCompany ||
   mongoose.model("UserCompany", userCompanySchema);
