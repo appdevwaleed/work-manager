@@ -4,7 +4,7 @@ import {
   companySubTypeEnum,
   companyStatus,
 } from "@/constants/enums";
-import { apiResponse } from "@/utils/common";
+import { apiResponse, generateRandomCode } from "@/utils/common";
 import { includeKeys } from "@/utils/common";
 import { errorCodes } from "@/constants/errorKeys";
 import { errorMessage } from "@/constants/errorMessages";
@@ -16,11 +16,11 @@ export const createCompany = async (request, user) => {
   return new Promise(async (resolve, reject) => {
     try {
       let api_req = await request.json();
-      if (user?.jobRole !== "superadmin" && user?.jobRole !== "admin") {
+      if (user?.jobRole !== "Superadmin" && user?.jobRole !== "Admin") {
         reject({
           status: errorCodes?.badRequest,
           message: errorMessage.notAuthPerson,
-          _obj: ["superadmin", "admin"],
+          _obj: ["Superadmin", "Admin"],
         });
       }
       if (!api_req?.name || api_req?.name.trim() == "") {
@@ -58,6 +58,7 @@ export const createCompany = async (request, user) => {
         parentCompany: api_req.parentCompany,
         status: api_req.status,
         createdby: user._id,
+        company_key: await generateRandomCode(),
       });
       if (
         api_req?.mainType &&

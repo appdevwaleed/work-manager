@@ -7,10 +7,16 @@ import {
   def_companyStatus,
 } from "@/constants/enums";
 import mongoose, { Schema } from "mongoose";
+import { unique } from "next/dist/build/utils";
 const CompanySchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "name is required for company!!"],
+  },
+  company_key: {
+    type: String,
+    unique: true,
+    required: [true, "company_key is required for company!!"],
   },
   city: {
     type: String,

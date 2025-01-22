@@ -1,28 +1,45 @@
-export const companyMainTypeEnum = ["services", "product"]; //services based company or product based company
-export const def_companyMainType = "product";
+export const companyMainTypeEnum = ["Services", "Product"]; //services based company or product based company
+export const def_companyMainType = "Product";
 export const companySubTypeEnum = [
-  "store", //inside country but new
-  "company", //wokring for company
-  "subcompany", //on notice period but inside country
-  "substore", //on notice period but inside country
+  "Store", //inside country but new
+  "Company", //wokring for company
+  "Subcompany", //on notice period but inside country
+  "Substore", //on notice period but inside country
 ];
-export const def_companySubType = "company";
+export const def_companySubType = "Company";
 export const companyStatus = [
-  "active",
-  "inactive",
-  "deleted",
-  "blocked",
-  "pending", //request to create company
+  "Active",
+  "Inactive",
+  "Deleted",
+  "Blocked",
+  "Pending", //request to create company
 ];
-export const def_companyStatus = "active";
-export const user_com_roles = ["admin", "subadmin", "manager", "employee"];
-export const def_user_com_role = "admin";
+export const def_companyStatus = "Active";
+export const user_com_roles = ["Admin", "Subadmin", "Manager", "Employee"];
+export const def_user_com_role = "Admin";
 export const user_com_status = [
-  "active",
-  "inactive",
-  "deleted",
-  "blocked",
-  "pending",
+  "Active",
+  "In Active",
+  "Deleted",
+  "Blocked",
+  "Pending",
 ];
-export const def_user_com_status = "active";
-// ......................................................................................................................................................................................................
+export const def_user_com_status = "Active";
+// ...................................................................Company Enums End...................................................................................................................................
+
+export const userDeviceType = ["Phone", "System"];
+export const userDeviceType_def = "Phone";
+
+export const userJobRole = ["Superadmin", "Admin", "Manager", "User"];
+export const userJobRole_def = "User";
+
+export const userStatus = [
+  "Active",
+  "Inactive",
+  "Blocked",
+  "Deleted",
+  "In Process",
+  "Rejected",
+];
+export const userStatus_def = "Active";
+// ...................................................................User Enums End.....................................................................................................................................

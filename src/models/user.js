@@ -1,8 +1,19 @@
 import mongoose, { Schema } from "mongoose";
-
+import {
+  userDeviceType,
+  userDeviceType_def,
+  userJobRole,
+  userJobRole_def,
+  userStatus,
+  userStatus_def,
+} from "@/constants/enums";
 const UserSchema = new Schema({
   fname: String,
   lname: String,
+  city: String,
+  country: String,
+  profileUrl: String,
+
   email: {
     type: String,
     unique: true,
@@ -32,57 +43,25 @@ const UserSchema = new Schema({
   accessToken: {
     type: String,
   },
-  deviceType: {
-    type: String,
-    enum: ["phone", "system"],
-    default: "phone",
-  },
   deviceId: {
     type: String,
     default: "ab123",
   },
+  deviceType: {
+    type: String,
+    enum: userDeviceType,
+    default: userDeviceType_def,
+  },
   jobRole: {
     type: String,
-    enum: ["employee", "employer", "rider", "admin", "user", "superadmin"],
-    default: "user",
-    required: [true, "jobRole is required !!"],
+    enum: userJobRole,
+    default: userJobRole_def,
   },
-  city: String,
-  country: String,
-  companyName: String,
-  companyAddress: String,
-  companyCity: String,
-  companyCountry: String,
-  profileUrl: String,
-  employmentStatus: {
-    type: String,
-    enum: [
-      "new", //inside country but new
-      "employed", //wokring for company
-      "resigned", //on notice period but inside country
-    ],
-    default: "employed",
-  },
-  experience: Number, //1 means 1 year 2 means 2 years,
-  description: String, //any description related to your job or you want to show employer
   userStatus: {
     type: String,
-    enum: [
-      "active",
-      "Inactive",
-      "blocked",
-      "DeletedByCompany",
-      "DeletedbyHimSelf",
-      "inProcess",
-      "rejected",
-    ],
-    default: "inProcess",
+    enum: userStatus,
+    default: userStatus_def,
   },
-  //   userType: {
-  //     type: String,
-  //     enum: ["employee", "employer", "rider", "admin"],
-  //     default: "employee",
-  //   },
   creationTime: { type: Date, default: Date.now },
   updatetime: { type: Date, default: Date.now },
 });

@@ -1,5 +1,5 @@
 import {
-  createUser,
+  signUpUser,
   findUserByEmail,
   findUserByPhone,
 } from "../../../../../utils/user";
@@ -39,9 +39,9 @@ const POST = async (request) => {
     }
 
     let newUser = null;
-    if (api_req?.email) newUser = await createUser({ email: api_req?.email });
+    if (api_req?.email) newUser = await signUpUser({ email: api_req?.email });
     else if (api_req?.phonenumber)
-      newUser = await createUser({ phonenumber: api_req?.phonenumber });
+      newUser = await signUpUser({ phonenumber: api_req?.phonenumber });
 
     if (api_req?.password) {
       newUser.password = await hashPassword(api_req?.password);

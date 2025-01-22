@@ -13,7 +13,6 @@ const POST = async (request) => {
     const corsHeader = await corsAndHeadersVerification(request);
     const user = await authenticateUser(request);
     let company = await createCompany(request, user);
-    console.log("company111111", company);
     company = company.toObject();
     const response = await responseData(company);
     return apiResponse(

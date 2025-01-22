@@ -20,7 +20,6 @@ const userCompanySchema = new mongoose.Schema({
     {
       type: String,
       enum: user_com_roles,
-      default: def_user_com_role,
     },
   ],
   status: {
