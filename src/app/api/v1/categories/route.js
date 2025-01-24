@@ -1,4 +1,4 @@
-const { Category } = require("@/models/category");
+const { Category } = require("../../../../models/category");
 const { NextResponse } = require("next/server");
 import { connectDb } from "../../../../lib/dbConnect";
 import { generateRandomId, buildTree } from "../../../../utils/common";

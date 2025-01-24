@@ -1,6 +1,9 @@
 const { NextResponse } = require("next/server");
-import { authenticateUser, corsAndHeadersVerification } from "@/utils/common";
-import { getAllComapnies } from "@/utils/company";
+import {
+  authenticateUser,
+  corsAndHeadersVerification,
+} from "../../../../../utils/common";
+import { getAllComapnies } from "../../../../../utils/company";
 
 const GET = async (req, res) => {
   try {

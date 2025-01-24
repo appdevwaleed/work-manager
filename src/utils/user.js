@@ -1,23 +1,23 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-const { User } = require("../models/user");
-const { UserCompany } = require("../models/userCompany");
-import { connectDb } from "@/lib/dbConnect";
+import { connectDb } from "../lib/dbConnect";
 import {
   generateAccessToken,
   generateRefreshToken,
   apiResponse,
+  hashPassword,
 } from "@/utils/common";
-import { errorCodes } from "@/constants/errorKeys";
-import { errorMessage } from "@/constants/errorMessages";
+import { errorCodes } from "../constants/errorKeys";
+import { errorMessage } from "../constants/errorMessages";
 import {
   userDeviceType,
   userJobRole,
   userStatus,
   user_com_roles,
-} from "@/constants/enums";
-import company from "@/models/company";
-import userCompany from "@/models/userCompany";
+} from "../constants/enums";
+import { Company } from "../models/company";
+import { UserCompany } from "../models/userCompany";
+import { User } from "../models/user";
 
 connectDb();
 
@@ -124,6 +124,21 @@ export const createUser = async (request, user) => {
           _obj: ["Superadmin", "Admin"],
         });
       }
+      if (!api_req?.company_id || api_req?.company_id.trim() == "") {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.noCompanyId,
+        });
+      } else if (api_req?.company_id && api_req?.company_id.trim() !== "") {
+        company_sel = await Company.findById(api_req.company_id);
+
+        if (!company_sel)
+          reject({
+            status: errorCodes?.badRequest,
+            message: errorMessage.noCompanyFound,
+          });
+      }
+
       if (!api_req?.fname || api_req?.fname.trim() == "") {
         reject({
           status: errorCodes?.badRequest,
@@ -151,7 +166,7 @@ export const createUser = async (request, user) => {
       }
       if (
         api_req?.deviceType &&
-        !userDeviceType.contain(api_req?.deviceType.trim())
+        !userDeviceType.includes(api_req?.deviceType.trim())
       ) {
         reject({
           status: errorCodes?.badRequest,
@@ -159,7 +174,7 @@ export const createUser = async (request, user) => {
           _obj: userDeviceType,
         });
       }
-      if (api_req?.jobRole && !userJobRole.conatin(api_req?.jobRole.trim())) {
+      if (api_req?.jobRole && !userJobRole.includes(api_req?.jobRole.trim())) {
         reject({
           status: errorCodes?.badRequest,
           message: errorMessage.noJobRole,
@@ -169,7 +184,7 @@ export const createUser = async (request, user) => {
 
       if (
         api_req?.userStatus &&
-        !userStatus.contain(api_req?.userStatus.trim())
+        !userStatus.includes(api_req?.userStatus.trim())
       ) {
         reject({
           status: errorCodes?.badRequest,
@@ -177,10 +192,10 @@ export const createUser = async (request, user) => {
           _obj: userStatus,
         });
       }
-
+      //role of user you want in the company
       if (
         !api_req?.user_com_roles ||
-        !user_com_roles.contain(api_req?.user_com_roles.trim())
+        !user_com_roles.includes(api_req?.user_com_roles.trim())
       ) {
         reject({
           status: errorCodes?.badRequest,
@@ -189,19 +204,6 @@ export const createUser = async (request, user) => {
         });
       }
 
-      if (!api_req?.company_id || api_req?.company_id.trim() == "") {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noCompanyId,
-        });
-      } else if (api_req?.company_id && api_req?.company_id.trim() !== "") {
-        company_sel = await company.findById(api_req.company_id);
-        if (!company_sel)
-          reject({
-            status: errorCodes?.badRequest,
-            message: errorMessage.noCompanyFound,
-          });
-      }
       //new user created by super admin user
       let user_created = await new User({
         fname: api_req.fname,
@@ -211,7 +213,6 @@ export const createUser = async (request, user) => {
         password: await hashPassword("A12345678"), //default password set for all users created by admins
         createdby: user._id,
       });
-
       if (api_req?.deviceType) user_created.deviceType = api_req.deviceType;
       if (api_req?.jobRole) user_created.jobRole = api_req.jobRole;
       if (api_req?.userStatus) user_created.userStatus = api_req.userStatus;
@@ -232,12 +233,15 @@ export const createUser = async (request, user) => {
 
       await user_created.save();
       await user_company.save();
+      user_company = user_company.toObject();
+      user_created = user_created.toObject();
       let response = {
         ...user_created,
         company: user_company,
       };
       resolve(response);
     } catch (error) {
+      console.log("error company_sel", error);
       reject(error);
     }
   });

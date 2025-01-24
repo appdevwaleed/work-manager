@@ -1,11 +1,11 @@
-import { connectDb } from "@/lib/dbConnect";
-import { apiResponse, excludeKeys } from "@/utils/common";
-import { errorCodes } from "@/constants/errorKeys";
+import { connectDb } from "../../../../../lib/dbConnect";
+import { apiResponse, excludeKeys } from "../../../../../utils/common";
+import { errorCodes } from "../../../../../constants/errorKeys";
 import {
   authenticateUser,
   corsAndHeadersVerification,
 } from "../../../../../utils/common";
-import { createCompany, responseData } from "@/utils/company";
+import { createCompany, responseData } from "../../../../../utils/company";
 connectDb();
 
 const POST = async (request) => {

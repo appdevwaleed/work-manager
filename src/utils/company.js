@@ -1,15 +1,15 @@
-import Company from "@/models/company";
+import { Company } from "../models/company";
 import {
   companyMainTypeEnum,
   companySubTypeEnum,
   companyStatus,
-} from "@/constants/enums";
-import { apiResponse, generateRandomCode } from "@/utils/common";
-import { includeKeys } from "@/utils/common";
-import { errorCodes } from "@/constants/errorKeys";
-import { errorMessage } from "@/constants/errorMessages";
+} from "../constants/enums";
+import { apiResponse, generateRandomCode } from "../utils/common";
+import { includeKeys } from "../utils/common";
+import { errorCodes } from "../constants/errorKeys";
+import { errorMessage } from "../constants/errorMessages";
 
-import { connectDb } from "@/lib/dbConnect";
+import { connectDb } from "../lib/dbConnect";
 connectDb();
 
 export const createCompany = async (request, user) => {
@@ -54,7 +54,6 @@ export const createCompany = async (request, user) => {
         city: api_req.city,
         country: api_req.country,
         address: api_req.address,
-        type: api_req.type,
         parentCompany: api_req.parentCompany,
         status: api_req.status,
         createdby: user._id,
@@ -194,7 +193,6 @@ export const getAllComapnies = async (request) => {
         reject({
           message: "companies not found",
           status: 400,
-          data: {},
         });
       }
     } catch (error) {

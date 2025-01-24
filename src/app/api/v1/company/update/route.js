@@ -1,14 +1,14 @@
-import { connectDb } from "@/lib/dbConnect";
+import { connectDb } from "../../../../../lib/dbConnect";
 import {
   apiResponse,
   excludeKeys,
   authenticateUser,
   corsAndHeadersVerification,
-} from "@/utils/common";
-import { errorCodes } from "@/constants/errorKeys";
+} from "../../../../../utils/common";
+import { errorCodes } from "../../../../../constants/errorKeys";
 
-import { updateCompany, responseData } from "@/utils/company";
-import { errorMessage } from "@/constants/errorMessages";
+import { updateCompany, responseData } from "../../../../../utils/company";
+import { errorMessage } from "../../../../../constants/errorMessages";
 connectDb();
 
 const POST = async (request) => {

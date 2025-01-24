@@ -1,6 +1,6 @@
 import { connectDb } from "../../../../lib/dbConnect";
 import { NextResponse } from "next/server";
-import { User } from "@/models/user";
+import { User } from "../../../../models/user";
 connectDb();
 // export function GET(request) {
 //   return NextResponse.json(users);

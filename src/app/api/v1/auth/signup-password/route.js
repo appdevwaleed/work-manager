@@ -1,9 +1,5 @@
-import {
-  signUpUser,
-  findUserByEmail,
-  findUserByPhone,
-} from "../../../../../utils/user";
-import { connectDb } from "../../../../../lib/dbConnect";
+import { signUpUser, findUserByEmail, findUserByPhone } from "@/utils/user";
+import { connectDb } from "@/lib/dbConnect";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -11,14 +7,17 @@ import {
   generateRandomCode,
   excludeKeys,
   hashPassword,
-} from "../../../../../utils/common";
-import { errorCodes } from "../../../../../constants/errorKeys";
+} from "@/utils/common";
+import { errorCodes } from "@/constants/errorKeys";
+import { errorMessage } from "@/constants/errorMessages";
+import { userJobRole } from "@/constants/enums";
 
 connectDb();
 
 const POST = async (request) => {
   try {
     const api_req = await request.json();
+    console.log("api_reqapi_reqapi_reqapi_reqapi_req", api_req);
     if (!api_req?.email && !api_req?.phonenumber) {
       return apiResponse(
         errorCodes.badRequest,
@@ -37,6 +36,13 @@ const POST = async (request) => {
         : "User already exists, please signin with " + api_req.email;
       return apiResponse(errorCodes.badRequest, message);
     }
+    if (api_req?.jobRole && !userJobRole.includes(api_req?.jobRole.trim())) {
+      reject({
+        status: errorCodes?.badRequest,
+        message: errorMessage.noJobRole,
+        _obj: userJobRole,
+      });
+    }
 
     let newUser = null;
     if (api_req?.email) newUser = await signUpUser({ email: api_req?.email });
@@ -49,7 +55,9 @@ const POST = async (request) => {
 
     newUser.refreshToken = await generateRefreshToken(newUser);
     newUser.accessToken = await generateAccessToken(newUser);
-
+    if (api_req?.jobRole && userJobRole.includes(api_req?.jobRole.trim())) {
+      newUser.jobRole = api_req?.jobRole;
+    }
     await newUser.save();
     newUser = newUser.toObject();
     console.log("newUser", newUser);

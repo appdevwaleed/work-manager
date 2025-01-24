@@ -4,7 +4,7 @@ import {
   def_user_com_role,
   user_com_status,
   def_user_com_status,
-} from "@/constants/enums";
+} from "../constants/enums";
 const userCompanySchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -36,5 +36,6 @@ const userCompanySchema = new mongoose.Schema({
   updatetime: { type: Date, default: Date.now },
 });
 
-export default mongoose.models.UserCompany ||
+export const UserCompany =
+  mongoose.models.UserCompany ||
   mongoose.model("UserCompany", userCompanySchema);

@@ -1,4 +1,4 @@
-import { Category } from "@/models/category";
+import { Category } from "../../../../..//models/category";
 import { NextResponse } from "next/server";
 import { connectDb } from "../../../../../lib/dbConnect";
 connectDb();

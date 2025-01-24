@@ -5,9 +5,8 @@ import {
   def_companyMainType,
   def_companySubType,
   def_companyStatus,
-} from "@/constants/enums";
+} from "../constants/enums";
 import mongoose, { Schema } from "mongoose";
-import { unique } from "next/dist/build/utils";
 const CompanySchema = new mongoose.Schema({
   name: {
     type: String,
@@ -60,5 +59,5 @@ const CompanySchema = new mongoose.Schema({
   updatetime: { type: Date, default: Date.now },
 });
 
-export default mongoose.models.Company ||
-  mongoose.model("Company", CompanySchema);
+export const Company =
+  mongoose.models.Company || mongoose.model("Company", CompanySchema);

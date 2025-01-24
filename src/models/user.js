@@ -6,7 +6,7 @@ import {
   userJobRole_def,
   userStatus,
   userStatus_def,
-} from "@/constants/enums";
+} from "../constants/enums";
 const UserSchema = new Schema({
   fname: String,
   lname: String,

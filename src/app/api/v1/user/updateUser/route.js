@@ -7,9 +7,11 @@ import {
   hashPassword,
 } from "../../../../../utils/common";
 import { errorCodes } from "../../../../../constants/errorKeys";
+
 import { findUserById } from "../../../../../utils/user";
 import { connectDb } from "../../../../../lib/dbConnect";
-
+import { userJobRole } from "@/constants/enums";
+import { errorMessage } from "@/constants/errorMessages";
 connectDb();
 
 const POST = async (request) => {
@@ -21,6 +23,14 @@ const POST = async (request) => {
     if (!existingUser) {
       return apiResponse(errorCodes.badRequest, "User not found");
     }
+    if (api_req?.jobRole && !userJobRole.includes(api_req?.jobRole.trim())) {
+      return apiResponse(
+        errorCodes.badRequest,
+        errorMessage.noJobRole,
+        userJobRole
+      );
+    }
+
     if (api_req?.password) {
       existingUser.password = await hashPassword(api_req?.password); //
     }
