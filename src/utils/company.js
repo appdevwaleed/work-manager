@@ -108,15 +108,16 @@ export const updateCompany = async (request, user) => {
   return new Promise(async (resolve, reject) => {
     try {
       let api_req = await request.json();
-      if (user?.jobRole !== "superadmin" && user?.jobRole !== "admin") {
+      if (user?.jobRole !== "Superadmin" && user?.jobRole !== "Admin") {
         reject({
           status: errorCodes?.badRequest,
           message: errorMessage.notAuthPerson,
-          _obj: ["superadmin", "admin"],
+          _obj: ["Superadmin", "Admin"],
         });
       }
       let fil_company = await Company.findById(api_req?.company_id);
       if (!fil_company) {
+        console.log("fil_company", api_req?.company_id);
         reject({
           status: errorCodes?.badRequest,
           message: errorMessage.comNotFound,

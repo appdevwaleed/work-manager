@@ -44,6 +44,35 @@ export const authenticateUser = async (req) => {
           message: "Authentification failed",
         });
       }
+      if (user?.userStatus !== "Active") {
+        reject({
+          status: 401,
+          error: info?.message || "User is not an active user",
+          message: "Authentification failed",
+        });
+      }
+      resolve(user);
+    })(req);
+  });
+};
+export const authUsrWithoutActiveCheck = async (req) => {
+  return new Promise((resolve, reject) => {
+    passport.authenticate("jwt", { session: false }, (err, user, info) => {
+      if (err) {
+        reject({
+          status: 500,
+          error: "Internal server error",
+          details: err.message,
+          message: "Internal server error",
+        });
+      }
+      if (!user) {
+        reject({
+          status: 401,
+          error: info?.message || "Token invalid",
+          message: "Authentification failed",
+        });
+      }
       resolve(user);
     })(req);
   });

@@ -49,18 +49,18 @@ const UserSchema = new Schema({
   },
   deviceType: {
     type: String,
-    enum: userDeviceType,
-    default: userDeviceType_def,
+    enum: userDeviceType, //["Phone", "System"]
+    default: userDeviceType_def, //"Phone"
   },
   jobRole: {
     type: String,
-    enum: userJobRole,
-    default: userJobRole_def,
+    enum: userJobRole, //["Superadmin", "Admin", "Manager", "User"]
+    default: userJobRole_def, //"User"
   },
   userStatus: {
     type: String,
-    enum: userStatus,
-    default: userStatus_def,
+    enum: userStatus, //["Active","Inactive","Blocked","Deleted","In Process","Rejected"]
+    default: userStatus_def, //Active
   },
   creationTime: { type: Date, default: Date.now },
   updatetime: { type: Date, default: Date.now },

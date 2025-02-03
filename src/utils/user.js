@@ -1,23 +1,24 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { connectDb } from "../lib/dbConnect";
+import { connectDb } from "@/lib/dbConnect";
 import {
   generateAccessToken,
   generateRefreshToken,
   apiResponse,
   hashPassword,
 } from "@/utils/common";
-import { errorCodes } from "../constants/errorKeys";
-import { errorMessage } from "../constants/errorMessages";
+import { errorCodes } from "@/constants/errorKeys";
+import { errorMessage } from "@/constants/errorMessages";
 import {
   userDeviceType,
   userJobRole,
   userStatus,
   user_com_roles,
-} from "../constants/enums";
-import { Company } from "../models/company";
-import { UserCompany } from "../models/userCompany";
-import { User } from "../models/user";
+  user_com_status,
+} from "@/constants/enums";
+import { Company } from "@/models/company";
+import { UserCompany } from "@/models/userCompany";
+import { User } from "@/models/user";
 
 connectDb();
 
@@ -67,6 +68,12 @@ export const generateToken = async (refreshToken) => {
           message: "refresh token is not valid",
         });
       }
+      if (user.status !== "Active") {
+        return apiResponse(
+          errorCodes.badRequest,
+          "User not active yet please try agin later"
+        );
+      }
       const accessToken = await generateAccessToken(user);
       user.accessToken = accessToken;
       user.save();
@@ -107,137 +114,115 @@ export const getAllUsers = async (request) => {
 export const createUser = async (request, user) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let api_req = await request.json();
-      let company_sel = null;
-      let creating_user_company = await UserCompany.where("user")
-        .equals(user._id)
-        .where("roles")
-        .equals(["Admin"]); // Exact match for city;
+      let _user_in_userTable = null;
+      let _user_company_join = null;
+      let _user_company = null;
+
+      const api_req = await request.json();
       if (
-        user?.jobRole !== "Superadmin" &&
-        user?.jobRole !== "Admin" &&
-        !creating_user_company
+        (user?.jobRole == "Superadmin" || user?.jobRole == "Admin") &&
+        !api_req?.company_id
       ) {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.notAuthorized_user,
-          _obj: ["Superadmin", "Admin"],
-        });
-      }
-      if (!api_req?.company_id || api_req?.company_id.trim() == "") {
         reject({
           status: errorCodes?.badRequest,
           message: errorMessage.noCompanyId,
         });
-      } else if (api_req?.company_id && api_req?.company_id.trim() !== "") {
-        company_sel = await Company.findById(api_req.company_id);
-
-        if (!company_sel)
+      } else if (
+        (user?.jobRole == "Superadmin" || user?.jobRole == "Admin") &&
+        api_req?.company_id
+      ) {
+        _user_company = await Company.findById(api_req.company_id);
+        if (!_user_company) {
           reject({
             status: errorCodes?.badRequest,
             message: errorMessage.noCompanyFound,
           });
+        }
+        let val_response = await validateUser(api_req);
+        if (val_response !== true) reject(val_response);
+        if (!api_req?.phonenumber && !api_req?.email) {
+          reject({
+            status: errorCodes?.badRequest,
+            message: "Either phonenumber or email is required",
+          });
+        }
+
+        if (api_req?.phonenumber)
+          _user_in_userTable = await findUserByPhone(api_req?.phonenumber);
+        else if (api_req?.email)
+          _user_in_userTable = await findUserByEmail(api_req?.email);
+        if (!_user_in_userTable) {
+          _user_in_userTable = await new User({
+            fname: api_req.fname,
+            lname: api_req.lname,
+            email: api_req.email,
+            phonenumber: api_req.phonenumber,
+            password: await hashPassword("A12345678"), //default password set for all users created by admins
+            createdby: user._id,
+          });
+        }
+        _user_company_join = await UserCompany.where("user")
+          .equals(user._id)
+          .where("company")
+          .equals(api_req.company_id);
+        if (_user_company_join) {
+          _user_company_join.user = _user_in_userTable._id;
+          _user_company_join.roles = _user_in_userTable.user_com_roles;
+          _user_company_join.status = _user_in_userTable.user_com_status;
+          _user_company_join.updatetime = Date.now();
+        } else {
+          _user_company_join = await new UserCompany({
+            user: _user_in_userTable._id,
+            company: _user_company._id,
+            roles: api_req.user_com_roles,
+            status: api_req.user_com_status,
+            createdby: user._id,
+          });
+        }
+      } else {
+        _user_company = await UserCompany.where("user")
+          .equals(user._id)
+          .where("roles")
+          .equals(["Admin", "Subadmin"]) //Admin or Subadmin of the company can add user
+          .where("status")
+          .equals("Active");
+        if (!_user_company) {
+          reject({
+            status: errorCodes?.badRequest,
+            message: errorMessage.notAuthorized_user,
+            _obj: ["Superadmin", "Subadmin"],
+          });
+        }
       }
 
-      if (!api_req?.fname || api_req?.fname.trim() == "") {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noFNameError,
-        });
-      }
-      if (!api_req?.lname || api_req?.lname.trim() == "") {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noLNameError,
-        });
-      }
-
-      if (!api_req?.email || api_req?.email.trim() == "") {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noEmailError,
-        });
-      }
-      if (!api_req?.phonenumber || api_req?.phonenumber.trim() == "") {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noPhoneError,
-        });
-      }
-      if (
-        api_req?.deviceType &&
-        !userDeviceType.includes(api_req?.deviceType.trim())
-      ) {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noDeviceType,
-          _obj: userDeviceType,
-        });
-      }
-      if (api_req?.jobRole && !userJobRole.includes(api_req?.jobRole.trim())) {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noJobRole,
-          _obj: userJobRole,
-        });
-      }
-
-      if (
-        api_req?.userStatus &&
-        !userStatus.includes(api_req?.userStatus.trim())
-      ) {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noUserStatus,
-          _obj: userStatus,
-        });
-      }
-      //role of user you want in the company
-      if (
-        !api_req?.user_com_roles ||
-        !user_com_roles.includes(api_req?.user_com_roles.trim())
-      ) {
-        reject({
-          status: errorCodes?.badRequest,
-          message: errorMessage.noUsrComRoles,
-          _obj: user_com_roles,
-        });
-      }
-
-      //new user created by super admin user
-      let user_created = await new User({
-        fname: api_req.fname,
-        lname: api_req.lname,
-        email: api_req.email,
-        phonenumber: api_req.phonenumber,
-        password: await hashPassword("A12345678"), //default password set for all users created by admins
-        createdby: user._id,
-      });
-      if (api_req?.deviceType) user_created.deviceType = api_req.deviceType;
-      if (api_req?.jobRole) user_created.jobRole = api_req.jobRole;
-      if (api_req?.userStatus) user_created.userStatus = api_req.userStatus;
+      if (api_req?.fname) _user_in_userTable.fname = api_req.fname;
+      if (api_req?.lname) _user_in_userTable.lname = api_req.lname;
+      if (api_req?.deviceType)
+        _user_in_userTable.deviceType = api_req.deviceType;
+      if (api_req?.jobRole) _user_in_userTable.jobRole = api_req.jobRole;
+      if (api_req?.userStatus)
+        _user_in_userTable.userStatus = api_req.userStatus;
       if (api_req?.city && api_req?.city !== "")
-        user_created.city = api_req.city;
+        _user_in_userTable.city = api_req.city;
       if (api_req?.country && api_req?.country !== "")
-        user_created.country = api_req.country;
+        _user_in_userTable.country = api_req.country;
       if (api_req?.profileUrl && api_req?.profileUrl !== "")
-        user_created.profileUrl = api_req.profileUrl;
+        _user_in_userTable.profileUrl = api_req.profileUrl;
       if (api_req?.deviceId && api_req?.deviceId !== "")
-        user_created.deviceId = api_req.deviceId;
-      let user_company = await new UserCompany({
-        user: user_created._id,
-        company: company_sel._id,
-        roles: api_req.user_com_roles,
-        createdby: user._id,
-      });
+        _user_in_userTable.deviceId = api_req.deviceId;
 
-      await user_created.save();
-      await user_company.save();
-      user_company = user_company.toObject();
-      user_created = user_created.toObject();
+      _user_company_join.roles = api_req.user_com_roles;
+      _user_company_join.createdby = api_req.user_com_status;
+      _user_company_join.updatetime = Date.now;
+
+      await _user_in_userTable.save();
+      await _user_company_join.save();
+      _user_in_userTable = _user_in_userTable.toObject();
+      _user_company_join = _user_company_join.toObject();
+      _user_company = _user_company.toObject();
       let response = {
-        ...user_created,
-        company: user_company,
+        ..._user_in_userTable,
+        company: { ..._user_company, useInCompany: _user_company_join },
       };
       resolve(response);
     } catch (error) {
@@ -245,4 +230,77 @@ export const createUser = async (request, user) => {
       reject(error);
     }
   });
+};
+
+const validateUser = async (api_req) => {
+  if (!api_req?.fname || api_req?.fname.trim() == "") {
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noFNameError,
+    };
+  } else if (!api_req?.lname || api_req?.lname.trim() == "") {
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noLNameError,
+    };
+  } else if (
+    api_req?.deviceType &&
+    !userDeviceType.includes(api_req?.deviceType.trim())
+  ) {
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noDeviceType,
+      _obj: userDeviceType,
+    };
+  } else if (
+    api_req?.jobRole &&
+    !userJobRole.includes(api_req?.jobRole.trim())
+  ) {
+    //user role as generic mostly it will be User as default
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noJobRole,
+      _obj: userJobRole,
+    };
+  } else if (
+    api_req?.userStatus &&
+    !userStatus.includes(api_req?.userStatus.trim()) //user status as generic mostly it will be Active as default
+  ) {
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noUserStatus,
+      _obj: userStatus,
+    };
+  } else if (!api_req?.email || api_req?.email.trim() == "") {
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noEmailError,
+    };
+  } else if (!api_req?.phonenumber || api_req?.phonenumber.trim() == "") {
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noPhoneError,
+    };
+  }
+  //role of user you want in the company
+  if (
+    !api_req?.user_com_roles ||
+    !user_com_roles.includes(api_req?.user_com_roles.trim())
+  ) {
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noUsrComRoles,
+      _obj: user_com_roles,
+    };
+  }
+  if (
+    !api_req?.user_com_status ||
+    !user_com_status.includes(api_req?.user_com_status.trim())
+  ) {
+    return {
+      status: errorCodes?.badRequest,
+      message: errorMessage.noUsrComStatus,
+      _obj: user_com_status,
+    };
+  } else return true;
 };

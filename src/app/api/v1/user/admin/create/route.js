@@ -5,6 +5,7 @@ import {
   authenticateUser,
   corsAndHeadersVerification,
   hashPassword,
+  authUsrWithoutActiveCheck,
 } from "@/utils/common";
 import { errorCodes } from "@/constants/errorKeys";
 import { createUser } from "@/utils/user";

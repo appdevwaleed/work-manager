@@ -24,6 +24,12 @@ const POST = async (request) => {
     } else if (phonenumber) {
       user = await findUserByPhone(phonenumber);
     }
+    if (user.status !== "Active") {
+      return apiResponse(
+        errorCodes.badRequest,
+        "User not active yet please try agin later"
+      );
+    }
     user.phoneOtp = await generateRandomCode();
     user.emailOtp = await generateRandomCode();
     console.log("user", user);

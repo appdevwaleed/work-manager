@@ -31,6 +31,9 @@ const POST = async (request) => {
     if (!isPasswordValid) {
       return apiResponse(errorCodes.badRequest, "Password is incorrect");
     }
+    if (user.userStatus !== "Active") {
+      return apiResponse(errorCodes.badRequest, "User not active");
+    }
     const accessToken = await generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
     user.refreshToken = refreshToken;

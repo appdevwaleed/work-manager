@@ -23,6 +23,12 @@ const POST = async (request) => {
     if (!user) {
       return apiResponse(errorCodes.badRequest, "user not found");
     }
+    if (user.status !== "Active") {
+      return apiResponse(
+        errorCodes.badRequest,
+        "User not active yet please try agin later"
+      );
+    }
     const accessToken = await generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
     user.refreshToken = refreshToken;

@@ -26,6 +26,8 @@ const errorMessage = {
     "Please provide job role of this user from the given list",
   noUserStatus: "Please provide job role of this user from the given list",
   noUsrComRoles: "Please provide user roles for the company",
+  noUsrComStatus: "Please provide user status for the company",
   userCreated: "User Created successfully",
+  userFound: "User already found",
 };
 export { errorMessage };

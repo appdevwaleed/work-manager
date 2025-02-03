@@ -49,6 +49,7 @@ const POST = async (request) => {
       newUser.password = await hashPassword(api_req?.password);
       newUser.phoneOtp = await generateRandomCode();
     }
+
     await newUser.save();
     newUser = newUser.toObject();
     newUser = await excludeKeys(newUser, [

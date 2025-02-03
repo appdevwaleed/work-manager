@@ -1,0 +1,8 @@
+Super admin Eligibility 
+
+
+1- Super admin can create Companies 
+2- Super admin can create Users with assigning them companies (Super admin will create Admin or Subadmin for specific company)(Company id is must for creating user by Super admin)
+    Reamining users for that company will be created by Admin or Subadmin of that company 
+    If super admin create (admin subadmin) the password will be default A12345678
+

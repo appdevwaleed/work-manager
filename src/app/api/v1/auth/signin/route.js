@@ -21,9 +21,15 @@ const POST = async (request) => {
     let user = null;
     if (email) {
       user = await findUserByEmail(email);
+      if (user.status !== "Active") {
+        return apiResponse(errorCodes.badRequest, "User not active");
+      }
       user.emailOtp = await generateRandomCode();
     } else if (phonenumber) {
       user = await findUserByPhone(phonenumber);
+      if (user.status !== "Active") {
+        return apiResponse(errorCodes.badRequest, "User not active");
+      }
       user.phoneOtp = await generateRandomCode();
     }
     await user.save();
