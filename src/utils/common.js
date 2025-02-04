@@ -6,6 +6,9 @@ passport.initialize();
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+export const isSubset = (subsetArray, mainArray) => {
+  return subsetArray.every((item) => mainArray.includes(item));
+};
 export const generateAccessToken = async (user) => {
   return jwt.sign(
     { id: user._id, phonenumber: user.phonenumber }, //email: user.email,

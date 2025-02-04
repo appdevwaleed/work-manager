@@ -6,6 +6,7 @@ import {
   generateRefreshToken,
   apiResponse,
   hashPassword,
+  isSubset,
 } from "@/utils/common";
 import { errorCodes } from "@/constants/errorKeys";
 import { errorMessage } from "@/constants/errorMessages";
@@ -147,10 +148,13 @@ export const createUser = async (request, user) => {
           });
         }
 
-        if (api_req?.phonenumber)
+        if (api_req?.use_id)
+          _user_in_userTable = await findUserByEmail(api_req?.email);
+        else if (api_req?.phonenumber)
           _user_in_userTable = await findUserByPhone(api_req?.phonenumber);
         else if (api_req?.email)
           _user_in_userTable = await findUserByEmail(api_req?.email);
+
         if (!_user_in_userTable) {
           _user_in_userTable = await new User({
             fname: api_req.fname,
@@ -160,17 +164,16 @@ export const createUser = async (request, user) => {
             password: await hashPassword("A12345678"), //default password set for all users created by admins
             createdby: user._id,
           });
+          await _user_in_userTable.save();
         }
-        _user_company_join = await UserCompany.where("user")
-          .equals(user._id)
+
+        _user_company_join = await UserCompany.findOne()
+          .where("user")
+          .equals(_user_in_userTable._id)
           .where("company")
-          .equals(api_req.company_id);
-        if (_user_company_join) {
-          _user_company_join.user = _user_in_userTable._id;
-          _user_company_join.roles = _user_in_userTable.user_com_roles;
-          _user_company_join.status = _user_in_userTable.user_com_status;
-          _user_company_join.updatetime = Date.now();
-        } else {
+          .equals(_user_company._id);
+        console.log(_user_company_join);
+        if (!_user_company_join || _user_company_join?.length == 0) {
           _user_company_join = await new UserCompany({
             user: _user_in_userTable._id,
             company: _user_company._id,
@@ -178,6 +181,15 @@ export const createUser = async (request, user) => {
             status: api_req.user_com_status,
             createdby: user._id,
           });
+          await _user_company_join.save();
+        } else {
+          (_user_company_join.user = _user_company_join.user),
+            (_user_company_join.company = _user_company_join.company),
+            (_user_company_join.roles = api_req.user_com_roles);
+          _user_company_join.status = api_req.user_com_status;
+          _user_company_join.updatetime = Date.now();
+          console.log(_user_company_join);
+          await _user_company_join.save();
         }
       } else {
         _user_company = await UserCompany.where("user")
@@ -197,6 +209,9 @@ export const createUser = async (request, user) => {
 
       if (api_req?.fname) _user_in_userTable.fname = api_req.fname;
       if (api_req?.lname) _user_in_userTable.lname = api_req.lname;
+      // if (api_req?.phonenumber)
+      //   _user_in_userTable.phonenumber = api_req.phonenumber;
+      // if (api_req?.email) _user_in_userTable.email = api_req.email;
       if (api_req?.deviceType)
         _user_in_userTable.deviceType = api_req.deviceType;
       if (api_req?.jobRole) _user_in_userTable.jobRole = api_req.jobRole;
@@ -211,12 +226,11 @@ export const createUser = async (request, user) => {
       if (api_req?.deviceId && api_req?.deviceId !== "")
         _user_in_userTable.deviceId = api_req.deviceId;
 
-      _user_company_join.roles = api_req.user_com_roles;
-      _user_company_join.createdby = api_req.user_com_status;
-      _user_company_join.updatetime = Date.now;
-
+      ////////////////////////////////////////////////////////////////////////////
+      console.log(_user_in_userTable);
+      console.log(_user_company);
+      console.log(_user_company_join);
       await _user_in_userTable.save();
-      await _user_company_join.save();
       _user_in_userTable = _user_in_userTable.toObject();
       _user_company_join = _user_company_join.toObject();
       _user_company = _user_company.toObject();
@@ -285,7 +299,7 @@ const validateUser = async (api_req) => {
   //role of user you want in the company
   if (
     !api_req?.user_com_roles ||
-    !user_com_roles.includes(api_req?.user_com_roles.trim())
+    !isSubset(api_req?.user_com_roles, user_com_roles)
   ) {
     return {
       status: errorCodes?.badRequest,
