@@ -91,17 +91,88 @@ export const generateToken = async (refreshToken) => {
   });
 };
 
-export const getAllUsers = async (request) => {
+//Superadmin & Admin can get all users
+//Only Admin or Subadmin of company can get users list of their company just
+
+export const getAllUsers = async (request, user) => {
   return new Promise(async (resolve, reject) => {
+    let check = false;
+    const { company_id, user_status_in_company, roles_in_company } =
+      await req.query;
     try {
-      let users = await User.find();
-      if (users?.length > 0) {
-        resolve(users);
+      if (user?.jobRole == "Superadmin" || user.jobRole == "Admin") {
+        check = true;
+      } else if (
+        user?.jobRole !== "Superadmin" &&
+        user.jobRole !== "Admin" &&
+        !company_id
+      ) {
+        return reject({
+          status: errorCodes?.badRequest,
+          message: "company_id is required to user users for your company",
+        });
+      } else if (
+        user?.jobRole !== "Superadmin" &&
+        user.jobRole !== "Admin" &&
+        company_id
+      ) {
+        if (!mongoose.isValidObjectId(company_id)) {
+          return reject({
+            status: errorCodes?.badRequest,
+            message: errorMessage.noCompanyFound,
+          });
+        } else {
+          let is_company_admin = await UserCompany.findOne({
+            user: user._id,
+            company: new mongoose.ObjectId(company_id),
+            roles: {
+              $in: [user_com_roles[0], user_com_roles[1], , user_com_roles[2]],
+            }, // Admin & Subadmin, Manager
+            status: "Active",
+          });
+          if (!is_company_admin) {
+            return reject({
+              status: errorCodes?.badRequest,
+              message: errorMessage.notAuthorized_user,
+            });
+          } else {
+            check = true;
+          }
+        }
+      }
+
+      if (check) {
+        let _users = null;
+        if (!company_id) {
+          //for super admin
+          _users = await User.find();
+        } else {
+          //for admin subadmin and manager of the company
+          let query = {};
+          if (company_id) query.company = new mongoose.ObjectId(company_id);
+          if (user_status_in_company) query.status = user_status_in_company;
+          if (roles_in_company) {
+            query.roles = { $in: roles_in_company };
+          }
+          _users = await UserCompany.find(query);
+        }
+        if (_users?.length > 0) {
+          resolve({
+            message: "Users Found",
+            data: _users,
+            status: 200,
+          });
+        } else {
+          resolve({
+            message: "Users not found",
+            data: [],
+            status: 200,
+          });
+        }
       } else {
-        reject({
-          message: "users not found",
-          status: 400,
-          data: {},
+        return reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.internalIssue,
         });
       }
     } catch (error) {

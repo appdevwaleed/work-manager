@@ -29,5 +29,6 @@ const errorMessage = {
   noUsrComStatus: "Please provide user status for the company",
   userCreated: "User Created successfully",
   userFound: "User already found",
+  internalIssue: "Something went wront please try again",
 };
 export { errorMessage };
