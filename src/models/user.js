@@ -62,6 +62,16 @@ const UserSchema = new Schema({
     enum: userStatus, //["Active","Inactive","Blocked","Deleted","In Process","Rejected"]
     default: userStatus_def, //Active
   },
+  createdby: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   creationTime: { type: Date, default: Date.now },
   updatetime: { type: Date, default: Date.now },
 });

@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { connectDb } from "@/lib/dbConnect";
+import mongoose from "mongoose";
+
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -112,18 +114,29 @@ export const getAllUsers = async (request) => {
   });
 };
 
-export const createUser = async (request, user) => {
+//this function works for creation and updation of users by Superadmin & Admin
+//this function alse works for creation of users and updation of users by Admin & Subadmin of company
+export const createUpdateUser = async (request, user) => {
   return new Promise(async (resolve, reject) => {
     try {
+      console.log(user);
       let _user_in_userTable = null;
       let _user_company_join = null;
       let _user_company = null;
 
+      let check = true;
       const api_req = await request.json();
+      if (!mongoose.isValidObjectId(api_req.company_id)) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.noCompanyFound,
+        });
+      }
       if (
         (user?.jobRole == "Superadmin" || user?.jobRole == "Admin") &&
         !api_req?.company_id
       ) {
+        check = false;
         reject({
           status: errorCodes?.badRequest,
           message: errorMessage.noCompanyId,
@@ -132,86 +145,83 @@ export const createUser = async (request, user) => {
         (user?.jobRole == "Superadmin" || user?.jobRole == "Admin") &&
         api_req?.company_id
       ) {
-        _user_company = await Company.findById(api_req.company_id);
-        if (!_user_company) {
-          reject({
-            status: errorCodes?.badRequest,
-            message: errorMessage.noCompanyFound,
-          });
-        }
-        let val_response = await validateUser(api_req);
-        if (val_response !== true) reject(val_response);
-        if (!api_req?.phonenumber && !api_req?.email) {
-          reject({
-            status: errorCodes?.badRequest,
-            message: "Either phonenumber or email is required",
-          });
-        }
-
-        if (api_req?.use_id)
-          _user_in_userTable = await findUserByEmail(api_req?.email);
-        else if (api_req?.phonenumber)
-          _user_in_userTable = await findUserByPhone(api_req?.phonenumber);
-        else if (api_req?.email)
-          _user_in_userTable = await findUserByEmail(api_req?.email);
-
-        if (!_user_in_userTable) {
-          _user_in_userTable = await new User({
-            fname: api_req.fname,
-            lname: api_req.lname,
-            email: api_req.email,
-            phonenumber: api_req.phonenumber,
-            password: await hashPassword("A12345678"), //default password set for all users created by admins
-            createdby: user._id,
-          });
-          await _user_in_userTable.save();
-        }
-
-        _user_company_join = await UserCompany.findOne()
-          .where("user")
-          .equals(_user_in_userTable._id)
-          .where("company")
-          .equals(_user_company._id);
-        console.log(_user_company_join);
-        if (!_user_company_join || _user_company_join?.length == 0) {
-          _user_company_join = await new UserCompany({
-            user: _user_in_userTable._id,
-            company: _user_company._id,
-            roles: api_req.user_com_roles,
-            status: api_req.user_com_status,
-            createdby: user._id,
-          });
-          await _user_company_join.save();
-        } else {
-          (_user_company_join.user = _user_company_join.user),
-            (_user_company_join.company = _user_company_join.company),
-            (_user_company_join.roles = api_req.user_com_roles);
-          _user_company_join.status = api_req.user_com_status;
-          _user_company_join.updatetime = Date.now();
-          console.log(_user_company_join);
-          await _user_company_join.save();
-        }
+        check = true;
       } else {
-        _user_company = await UserCompany.where("user")
-          .equals(user._id)
-          .where("roles")
-          .equals(["Admin", "Subadmin"]) //Admin or Subadmin of the company can add user
-          .where("status")
-          .equals("Active");
-        if (!_user_company) {
-          reject({
-            status: errorCodes?.badRequest,
-            message: errorMessage.notAuthorized_user,
-            _obj: ["Superadmin", "Subadmin"],
-          });
+        let adminVerification = await UserCompany.findOne({
+          user: user._id,
+          company: api_req.company_id,
+          roles: { $in: ["Admin", "Subadmin"] }, // Using `$in` operator
+          status: "Active",
+        });
+        if (!adminVerification) {
+          check = false;
         }
+      }
+
+      if (!check) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.notAuthorized_user,
+        });
+      }
+
+      _user_company = await Company.findById(api_req.company_id);
+      if (!_user_company) {
+        reject({
+          status: errorCodes?.badRequest,
+          message: errorMessage.noCompanyFound,
+        });
+      }
+
+      let val_response = await validateUser(api_req);
+      if (val_response !== true) reject(val_response);
+
+      if (api_req?.user_id)
+        _user_in_userTable = await findUserById(api_req?.user_id);
+      else if (api_req?.phonenumber)
+        _user_in_userTable = await findUserByPhone(api_req?.phonenumber);
+      else if (api_req?.email)
+        _user_in_userTable = await findUserByEmail(api_req?.email);
+
+      if (!_user_in_userTable) {
+        _user_in_userTable = await new User({
+          fname: api_req.fname,
+          lname: api_req.lname,
+          email: api_req.email,
+          phonenumber: api_req.phonenumber,
+          password: await hashPassword("A12345678"), //default password set for all users created by admins
+          createdby: user._id,
+          updatedBy: user._id,
+        });
+        await _user_in_userTable.save();
+      }
+      _user_company_join = await UserCompany.findOne()
+        .where("user")
+        .equals(_user_in_userTable._id)
+        .where("company")
+        .equals(_user_company._id);
+      if (!_user_company_join || _user_company_join?.length == 0) {
+        _user_company_join = await new UserCompany({
+          user: _user_in_userTable._id,
+          company: _user_company._id,
+          roles: api_req.user_com_roles,
+          status: api_req.user_com_status,
+          createdby: user._id,
+          updatedBy: user._id,
+        });
+        await _user_company_join.save();
+      } else {
+        (_user_company_join.user = _user_company_join.user),
+          (_user_company_join.company = _user_company_join.company),
+          (_user_company_join.roles = api_req.user_com_roles);
+        _user_company_join.status = api_req.user_com_status;
+        _user_company_join.updatetime = Date.now();
+        _user_company_join.updatedBy = user._id;
+        await _user_company_join.save();
       }
 
       if (api_req?.fname) _user_in_userTable.fname = api_req.fname;
       if (api_req?.lname) _user_in_userTable.lname = api_req.lname;
-      // if (api_req?.phonenumber)
-      //   _user_in_userTable.phonenumber = api_req.phonenumber;
-      // if (api_req?.email) _user_in_userTable.email = api_req.email;
       if (api_req?.deviceType)
         _user_in_userTable.deviceType = api_req.deviceType;
       if (api_req?.jobRole) _user_in_userTable.jobRole = api_req.jobRole;
@@ -225,11 +235,9 @@ export const createUser = async (request, user) => {
         _user_in_userTable.profileUrl = api_req.profileUrl;
       if (api_req?.deviceId && api_req?.deviceId !== "")
         _user_in_userTable.deviceId = api_req.deviceId;
+      _user_in_userTable.updatedBy = user._id;
+      _user_in_userTable.updatetime = new Date();
 
-      ////////////////////////////////////////////////////////////////////////////
-      console.log(_user_in_userTable);
-      console.log(_user_company);
-      console.log(_user_company_join);
       await _user_in_userTable.save();
       _user_in_userTable = _user_in_userTable.toObject();
       _user_company_join = _user_company_join.toObject();
@@ -257,6 +265,11 @@ const validateUser = async (api_req) => {
       status: errorCodes?.badRequest,
       message: errorMessage.noLNameError,
     };
+  } else if (!api_req?.phonenumber && !api_req?.email && api_req?.user_id) {
+    reject({
+      status: errorCodes?.badRequest,
+      message: "Either phonenumber or email or user_id is required",
+    });
   } else if (
     api_req?.deviceType &&
     !userDeviceType.includes(api_req?.deviceType.trim())

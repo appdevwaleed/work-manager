@@ -38,6 +38,9 @@ const POST = async (request) => {
     const refreshToken = await generateRefreshToken(user);
     user.refreshToken = refreshToken;
     user.accessToken = accessToken;
+    // user.createdby = user?._id;
+    // user.updatedBy = user?._id;
+
     await user.save();
     user = user.toObject();
     user = await excludeKeys(user, [

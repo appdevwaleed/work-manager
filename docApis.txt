@@ -1,8 +1,34 @@
 Super admin Eligibility 
 
 
-1- Super admin can create Companies 
-2- Super admin can create Users with assigning them companies (Super admin will create Admin or Subadmin for specific company)(Company id is must for creating user by Super admin)
+1- Superadmin can create company and update company.   (Apis)
+    http://localhost:3000/api/v1/company/create
+    http://localhost:3000/api/v1/company/update
+    http://localhost:3000/api/v1/company/listCompanies
+
+2- Super admin can create & upadate Users with assigning them companies (Superadmin will create Admin or Subadmin for specific company)(Company id is must for creating user by Super admin)
     Reamining users for that company will be created by Admin or Subadmin of that company 
-    If super admin create (admin subadmin) the password will be default A12345678
+    If super admin create (Admin Subadmin) the password will be default A12345678
+    createUser(http://localhost:3000/api/v1/user/admin/createUpdateUser)
+    Super admin is allowed to make any user in the system with email phone and default password will set with email and phone verification will be false.
+    {   Data we can give in request for creating user under company by Superadmin or Admin. 
+    
+        "company_id":"679223579a79f03805df5870",
+        "user_id":"67923efbffc817934bced08b",
+        
+        "fname":"Waleed",
+        "lname":"Iqbal awan",
+        "email":"moh@gmail1.comm",
+        "phonenumber":"+971526547",
+        "deviceType":"Phone",
+        "jobRole":"Admin",
+        "city":"Abu Dhabi",
+        "country":"United Arab Emirates",
+        "profileUrl":"https://abc.com",
+        "deviceId":"abcabc",
+        "user_com_roles":["Admin", "Subadmin", "Employee"],
+        
+        "userStatus":"Active",
+        "user_com_status":"Inactive"
+    }
 

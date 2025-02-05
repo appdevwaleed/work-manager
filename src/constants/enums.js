@@ -19,7 +19,7 @@ export const user_com_roles = ["Admin", "Subadmin", "Manager", "Employee"];
 export const def_user_com_role = "Admin";
 export const user_com_status = [
   "Active",
-  "In Active",
+  "Inactive",
   "Deleted",
   "Blocked",
   "Pending",

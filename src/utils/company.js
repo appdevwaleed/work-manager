@@ -54,11 +54,12 @@ export const createCompany = async (request, user) => {
         city: api_req.city,
         country: api_req.country,
         address: api_req.address,
-        parentCompany: api_req.parentCompany,
         status: api_req.status,
         createdby: user._id,
+        updatedby: user._id,
         company_key: await generateRandomCode(),
       });
+      await company.save();
       if (
         api_req?.mainType &&
         !companyMainTypeEnum.includes(api_req?.mainType)
@@ -97,9 +98,11 @@ export const createCompany = async (request, user) => {
       } else {
         company.status = api_req.status;
       }
+      console.log("company", company);
       await company.save();
       resolve(company);
     } catch (error) {
+      console.log("error", error);
       reject(error);
     }
   });
@@ -175,7 +178,7 @@ export const updateCompany = async (request, user) => {
       ) {
         fil_company.subType = api_req?.subType;
       }
-
+      fil_company.updatedby = user._id;
       await fil_company.save();
       resolve(fil_company);
     } catch (error) {

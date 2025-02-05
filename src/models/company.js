@@ -40,9 +40,9 @@ const CompanySchema = new mongoose.Schema({
     default: def_companySubType,
   },
   parentCompany: {
-    type: Number, //parent company id mongoose.ObjectId
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     unique: true,
-    default: null,
     sparse: true, // Enables unique constraint to ignore null values
   },
   status: {
@@ -51,6 +51,11 @@ const CompanySchema = new mongoose.Schema({
     default: def_companyStatus,
   },
   createdby: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  updatedby: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,

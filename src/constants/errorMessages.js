@@ -12,7 +12,7 @@ const errorMessage = {
   comCreatedSuccess: "Company created successfully",
   comUpdatedSuccess: "Company updated successfully",
   notAuthorized_user:
-    "Not an authentic person to create or update users, You should be an admin or superadmin, or admin of your company",
+    "Not an authentic person to create or update users, You should be an Admin | SuperAdmin, or Admin | Subadmin of your company",
   noFNameError: "Please provide first name",
   noLNameError: "Please provide second name",
   noEmailError: "Please provide email address of user",
